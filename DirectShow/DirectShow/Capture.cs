@@ -23,6 +23,13 @@ namespace DirectShow
         private IAMVideoControl m_VidControl = null;
         private IPin m_pinStill = null;
 
+        private IBaseFilter capFilter = null;
+
+
+        // define interfaces for changing image processing and camera control
+        private IAMCameraControl m_CameraControl = null;
+        private IAMVideoProcAmp m_VideoProcess = null;
+
         /// <summary> so we can wait for the async job to finish </summary>
         private ManualResetEvent m_PictureReady = null;
 
@@ -255,6 +262,10 @@ namespace DirectShow
             }
         }
 
+        public void setCameraControl(CameraControlProperty Prop, int Val, CameraControlFlags Mode)
+        {
+            m_CameraControl.Set(Prop, Val, Mode);
+        }
 
         /// <summary> build the capture graph for grabber. </summary>
         private void SetupGraph(DsDevice dev, int iWidth, int iHeight, short iBPP, Control hControl)
@@ -262,7 +273,6 @@ namespace DirectShow
             int hr;
 
             ISampleGrabber sampGrabber = null;
-            IBaseFilter capFilter = null;
             IPin pCaptureOut = null;
             IPin pSampleIn = null;
             IPin pRenderIn = null;
@@ -355,6 +365,10 @@ namespace DirectShow
                         SetConfigParms(m_pinStill, iWidth, iHeight, iBPP);
                     }
                 }
+
+                // setup camera and imaging controls
+                m_VideoProcess = capFilter as IAMVideoProcAmp;
+                m_CameraControl = capFilter as IAMCameraControl;
 
                 // Get the SampleGrabber interface
                 sampGrabber = new SampleGrabber() as ISampleGrabber;
@@ -571,22 +585,19 @@ namespace DirectShow
                 Debug.WriteLine(ex);
             }
 
-            if (m_FilterGraph != null)
-            {
-                Marshal.ReleaseComObject(m_FilterGraph);
-                m_FilterGraph = null;
-            }
+            ReleaseObject(m_CameraControl);
+            ReleaseObject(m_FilterGraph);
+            ReleaseObject(m_VidControl);
+            ReleaseObject(m_pinStill);
+            ReleaseObject(m_VideoProcess);
+        }
 
-            if (m_VidControl != null)
+        private void ReleaseObject(object Variable)
+        {
+            if (Variable != null)
             {
-                Marshal.ReleaseComObject(m_VidControl);
-                m_VidControl = null;
-            }
-
-            if (m_pinStill != null)
-            {
-                Marshal.ReleaseComObject(m_pinStill);
-                m_pinStill = null;
+                Marshal.ReleaseComObject(Variable);
+                Variable = null;
             }
         }
 

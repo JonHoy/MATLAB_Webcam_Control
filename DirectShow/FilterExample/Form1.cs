@@ -29,7 +29,7 @@ namespace FilterExample
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             Kernel = new float[,]{{-1, -2, -1}, {0, 0, 0}, {1, 2, -1}};
-            var Data = myCam.GrabData();
+            //var Data = myCam.GrabData();
         }
     }
 }

@@ -17,34 +17,31 @@ namespace Webcam_Sample
         {
             var Cameras = Capture.GetCameras();
             var Form = new PreviewForm();
+            var Form1 = new PreviewForm();
+            var Form2 = new PreviewForm();
+            Form.Visible = true;
+            Form1.Visible = true;
+            Form2.Visible = true;
+            Form2.Location = new Point(800, 100);
             var cam = new Capture(0,640,480,24,Form.pictureBox1);
+            cam.setCameraControl(DirectShowLib.CameraControlProperty.Focus, 0, DirectShowLib.CameraControlFlags.Manual);
             SubRoutine Algorithm = new SubRoutine(AddNoise);
             SubRoutine Algorithm_Bright = new SubRoutine(Brighten);
             var myStream = new VideoStream(ref cam, Algorithm);
             var myStream2 = new VideoStream(ref cam, Algorithm_Bright);
-            Form.Visible = true;
                 while (Form.IsDisposed == false)
                 {
-                    try
-                    {
-                        //var Photo = myStream.GetPhoto();
-                        //var Photo2 = myStream2.GetPhoto();
-                        //Console.WriteLine("Data Grabbed");
-                        Thread.Sleep(1000 / 30);
-                    }
-                    catch (Exception)
-                    {
-                        
-                        throw;
-                    }
+                    var Photo = myStream.GetPhoto();
+                    var Photo2 = myStream2.GetPhoto();
+                    Form1.pictureBox1.Image = Photo;
+                    Form2.pictureBox1.Image = Photo2;
+                    Form1.Refresh();
+                    Form2.Refresh();
+                    Console.WriteLine("Data Grabbed");
+                    Thread.Sleep(1000 / 30);
                 }
 
             
-        }
-
-        static void Program_BackgroundImageChanged(object sender, EventArgs e)
-        {
-            Console.WriteLine("New Frame at {0}", DateTime.Now.ToLongTimeString());
         }
 
         static byte[] RandNoise(byte[] Stream)
