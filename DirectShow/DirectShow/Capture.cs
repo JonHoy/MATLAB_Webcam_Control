@@ -73,7 +73,8 @@ namespace DirectShow
         public Capture(int iDeviceNum = 0, int iWidth = 640, int iHeight = 480, short iBPP = 24, Control hControl = null)
         {
             Buffer = new Byte[iHeight * iWidth * iBPP / 8];
-            
+            hControl.Width = iWidth;
+            hControl.Height = iHeight;
             DsDevice[] capDevices;
             if (hControl == null)
             {
@@ -112,6 +113,8 @@ namespace DirectShow
                 throw;
             }
         }
+
+     
 
         /// <summary> release everything. </summary>
         public void Dispose()
@@ -167,9 +170,9 @@ namespace DirectShow
             IntPtr srcPtr = Click();
             unsafe
             {
-                    fixed (byte* destPtr = &Buffer[0])
-                        CopyMemory((IntPtr)destPtr, srcPtr, Buffer.Length);
-                        //Array.Reverse(Buffer);
+                fixed (byte* destPtr = &Buffer[0])
+                    CopyMemory((IntPtr)destPtr, srcPtr, Buffer.Length);
+                //Array.Reverse(Buffer);
             }
             Marshal.FreeCoTaskMem(srcPtr);
         }
@@ -322,12 +325,6 @@ namespace DirectShow
                         pRaw = DsFindPin.ByCategory(capFilter, PinCategory.Capture, 0);
                         pSmart = DsFindPin.ByDirection(iSmartTee, PinDirection.Input, 0);
 
-                        hr = m_FilterGraph.Connect(pRaw, pSmart);
-                        DsError.ThrowExceptionForHR( hr );
-
-                        // Now set the capture and still pins (from the splitter)
-                        m_pinStill = DsFindPin.ByName(iSmartTee, "Preview");
-                        pCaptureOut = DsFindPin.ByName(iSmartTee, "Capture");
 
                         // If any of the default config items are set, perform the config
                         // on the actual video device (rather than the splitter)
@@ -335,6 +332,15 @@ namespace DirectShow
                         {
                             SetConfigParms(pRaw, iWidth, iHeight, iBPP);
                         }
+
+                        hr = m_FilterGraph.Connect(pRaw, pSmart);
+                        DsError.ThrowExceptionForHR( hr );
+
+                        // Now set the capture and still pins (from the splitter)
+                        m_pinStill = DsFindPin.ByName(iSmartTee, "Preview");
+                        pCaptureOut = DsFindPin.ByName(iSmartTee, "Capture");
+
+
                     }
                     finally
                     {
@@ -405,9 +411,9 @@ namespace DirectShow
                     hr = m_FilterGraph.Connect(pCaptureOut, pRenderIn);
                     DsError.ThrowExceptionForHR( hr );
 
-                    // Connect the Still pin to the sample grabber
-                    hr = m_FilterGraph.Connect(m_pinStill, pSampleIn);
-                    DsError.ThrowExceptionForHR( hr );
+                    // Connect the Still pin to the sample grabber ( Getting some issues with Logitech Webcam)
+                    //hr = m_FilterGraph.Connect(m_pinStill, pSampleIn);
+                    //DsError.ThrowExceptionForHR( hr );
                 }
 
                 // Learn the video properties
